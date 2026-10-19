@@ -18,27 +18,24 @@
   </div>
 </header>
 <main>
-<section class="hero">
-  <div class="wrap hero-in">
-    <div>
-      <p class="kicker">Courses</p>
-      <h1>기관이 운영하는<br>온라인 과정입니다</h1>
-      <p class="lead">한국어, 민간자격, 평생교육만 이 강의실에서 신청합니다. 사회통합·조기적응은 기관 홈페이지와 사회통합정보망을 이용합니다.</p>
-    </div>
-    <div class="hero-art"><img src="assets/icon-education.jpg" alt=""></div>
+<section class="hero slim">
+  <div class="wrap">
+    <p class="kicker">교육과정</p>
+    <h1>지금 이 강의실에서<br>신청할 수 있는 과정입니다</h1>
+    <p class="lead">생활 한국어, 병원동행 관리사, 성인문해 세 과정을 온라인으로 듣습니다. 사회통합프로그램(KIIP)과 조기적응은 여기서 신청하지 않습니다.</p>
   </div>
 </section>
 <section class="section">
   <div class="wrap">
-    <div class="box" style="margin-bottom:28px">
-      <h3>법무부 과정은 여기서 신청하지 않습니다</h3>
-      <p>사회통합프로그램(KIIP)은 사회통합정보망, 조기적응은 동포체류지원센터 안내를 따릅니다.</p>
+    <div class="box note-box">
+      <h3>법무부 과정은 다른 창구입니다</h3>
+      <p>사회통합프로그램은 사회통합정보망에서 신청하고, 조기적응은 동포체류지원센터 안내를 따릅니다. 이 강의실에는 기관이 직접 운영하는 교육만 있습니다.</p>
       <div class="actions">
-        <a class="btn line" href="https://www.socinet.go.kr/soci/main/main.jsp?MENU_TYPE=S_TOP_SY" target="_blank" rel="noopener">사회통합정보망</a>
-        <a class="btn line" data-public="ministry.html#early">조기적응 안내</a>
+        <a class="btn line" href="https://www.socinet.go.kr/soci/main/main.jsp?MENU_TYPE=S_TOP_SY" target="_blank" rel="noopener">사회통합정보망 과정조회</a>
+        <a class="btn line" data-public="ministry.html#early">조기적응 이용 안내</a>
       </div>
     </div>
-    <div class="grid" id="list"></div>
+    <div class="grid course-grid" id="list"></div>
   </div>
 </section>
 </main>
@@ -50,7 +47,21 @@ LMS.courses.forEach(function(c){
   const a=document.createElement("a");
   a.className="card";
   a.href="course.html?id="+c.id;
-  a.innerHTML='<div class="thumb"><img src="'+c.img+'" alt=""></div><div class="in"><em>'+c.cat+' · '+(c.type==="paid"?"유료":"무료")+'</em><strong>'+c.name+'</strong><p>'+c.desc+'</p><div class="meta"><span>'+c.weeks+'</span><span>'+c.teacher+'</span><span>'+LMS.money(c.price)+'</span></div><span class="btn line">자세히</span></div>';
+  a.innerHTML=
+    '<div class="thumb"><img src="'+c.img+'" alt=""></div>'+
+    '<div class="in">'+
+      '<em>'+c.cat+' · '+(c.type==="paid"?LMS.money(c.price):"무료")+'</em>'+
+      '<strong>'+c.name+'</strong>'+
+      '<p class="sub">'+(c.subtitle||"")+'</p>'+
+      '<p>'+c.desc+'</p>'+
+      '<div class="meta">'+
+        '<span>'+c.period+'</span>'+
+        '<span>'+c.weeks+'</span>'+
+        '<span>'+c.teacher+' 강사</span>'+
+      '</div>'+
+      '<p class="done-line"><b>1차시</b> '+c.lessons[0].name+' · '+c.lessons[0].min+'분</p>'+
+      '<span class="btn line">과정 자세히 보기</span>'+
+    '</div>';
   list.appendChild(a);
 });
 </script>

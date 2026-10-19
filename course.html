@@ -17,15 +17,20 @@
   </div>
 </header>
 <main>
-<section class="hero"><div class="wrap" id="head"></div></section>
+<section class="hero slim"><div class="wrap" id="head"></div></section>
 <section class="section"><div class="wrap">
-  <div class="split">
+  <div class="split detail">
     <div>
-      <p class="kicker">Curriculum</p>
-      <h2>커리큘럼</h2>
+      <h2>이 과정에서 하는 일</h2>
+      <ul class="outline" id="goals"></ul>
+      <h2 style="margin-top:36px">차시 일정</h2>
+      <p class="lead">날짜와 배우는 내용이 차시마다 다릅니다. 신청하면 나의 강의실에서 이 순서대로 듣습니다.</p>
       <div class="lessons" id="lessons"></div>
     </div>
-    <div class="box" id="applyBox"></div>
+    <aside>
+      <div class="box apply-box" id="applyBox"></div>
+      <div class="box" id="whoBox"></div>
+    </aside>
   </div>
 </div></section>
 </main>
@@ -33,14 +38,36 @@
 <script>
 const c=LMS.course(new URLSearchParams(location.search).get("id"))||LMS.courses[0];
 document.title=c.name+" | 참조은다문화 LMS";
-document.getElementById("head").innerHTML='<p class="crumb"><a href="courses.html">교육과정</a> · '+c.cat+'</p><p class="kicker">'+(c.type==="paid"?"유료":"무료")+'</p><h1>'+c.name+'</h1><p class="lead">'+c.desc+'</p><div class="meta"><span>기간 '+c.period+'</span><span>강사 '+c.teacher+'</span><span>'+LMS.money(c.price)+'</span></div>';
-document.getElementById("lessons").innerHTML=c.lessons.map(function(n,i){return "<button type='button'><span>0"+(i+1)+" "+n+"</span><b>차시</b></button>";}).join("");
+document.getElementById("head").innerHTML=
+  '<p class="crumb"><a href="courses.html">교육과정</a> · '+c.cat+'</p>'+
+  '<p class="kicker">'+(c.type==="paid"?"유료 · "+LMS.money(c.price):"무료 수강")+'</p>'+
+  '<h1>'+c.name+'</h1>'+
+  '<p class="lead">'+(c.subtitle?c.subtitle+"<br>":"")+c.desc+'</p>'+
+  '<div class="facts">'+
+    '<span><b>기간</b>'+c.period+'</span>'+
+    '<span><b>수업</b>'+c.weeks+'</span>'+
+    '<span><b>분량</b>'+c.hours+'</span>'+
+    '<span><b>강사</b>'+c.teacher+'</span>'+
+  '</div>';
+document.getElementById("goals").innerHTML=c.goals.map(function(g){return "<li>"+g+"</li>";}).join("");
+document.getElementById("lessons").innerHTML=c.lessons.map(function(n,i){
+  return "<div class='lesson-row is-static'><em>"+LMS.pad(i+1)+"</em><span><strong>"+n.name+"</strong><small>"+n.date+" · "+n.min+"분 · "+n.goal+"</small></span></div>";
+}).join("");
 let action="";
 if(!LMS.user()) action='<a class="btn fill" href="login.html?next='+encodeURIComponent("course.html?id="+c.id)+'">로그인 후 신청</a>';
-else if(LMS.isEnrolled(c.id)) action='<a class="btn fill" href="lesson.html?id='+c.id+'">강의실 열기</a>';
-else if(c.type==="paid") action='<a class="btn fill" href="pay.html?id='+c.id+'">결제하고 신청</a>';
-else action='<button class="btn fill" type="button" id="go">무료 수강신청</button>';
-document.getElementById("applyBox").innerHTML="<h3>수강신청</h3><p>신청하면 나의 강의실에서 이어서 듣습니다. 유료 과정은 결제 완료 후 권한이 열립니다.</p><div class='actions'>"+action+"</div>";
+else if(LMS.isEnrolled(c.id)) action='<a class="btn fill" href="lesson.html?id='+c.id+'">나의 강의실에서 듣기</a>';
+else if(c.type==="paid") action='<a class="btn fill" href="pay.html?id='+c.id+'">'+LMS.money(c.price)+' 결제하고 신청</a>';
+else action='<button class="btn fill" type="button" id="go">무료로 수강신청</button>';
+document.getElementById("applyBox").innerHTML=
+  "<h3>수강신청</h3>"+
+  "<p>"+(LMS.isEnrolled(c.id)?"이미 신청한 과정입니다. 강의실에서 이어서 들으면 됩니다.":"신청하면 나의 강의실에 이 과정이 생기고, 1차시부터 들을 수 있습니다.")+"</p>"+
+  "<div class='facts'><span><b>수강료</b>"+LMS.money(c.price)+"</span><span><b>장소</b>"+c.place+"</span></div>"+
+  "<div class='actions'>"+action+"</div>"+
+  "<p class='note'>"+c.notice+"</p>";
+document.getElementById("whoBox").innerHTML=
+  "<h3>이런 분께 맞습니다</h3>"+
+  "<p>"+c.audience+"</p>"+
+  "<p class='note'>강사 "+c.teacher+" · "+c.teacherBio+"</p>";
 const go=document.getElementById("go");
 if(go) go.onclick=function(){LMS.enroll(c.id);location.href="lesson.html?id="+c.id;};
 </script>
