@@ -132,6 +132,41 @@
     money,
     fileName,
     pad,
+    ring(pct, label, sub, size, display) {
+      const p = Math.max(0, Math.min(100, Number(pct) || 0));
+      const s = size || 120;
+      const r = 42;
+      const c = 2 * Math.PI * r;
+      const dash = (p / 100) * c;
+      return '<div class="chart-ring">'+
+        '<div class="chart-ring-wrap">'+
+          '<svg viewBox="0 0 120 120" width="'+s+'" height="'+s+'" aria-hidden="true">'+
+            '<circle class="track" cx="60" cy="60" r="'+r+'"></circle>'+
+            '<circle class="fill" cx="60" cy="60" r="'+r+'" stroke-dasharray="'+dash+' '+c+'"></circle>'+
+          '</svg>'+
+          '<div class="chart-ring-num"><b>'+(display!=null?display:p+"%")+'</b>'+(label?'<span>'+label+'</span>':'')+'</div>'+
+        '</div>'+
+        (sub?'<p>'+sub+'</p>':'')+
+      '</div>';
+    },
+    bars(rows) {
+      return '<div class="chart-bars">'+rows.map(function(row){
+        return '<div class="chart-bar">'+
+          '<div class="chart-bar-top"><strong>'+row.name+'</strong><span>'+row.pct+'% · '+row.done+'/'+row.total+'차시</span></div>'+
+          '<div class="chart-bar-track"><i style="width:'+row.pct+'%"></i><em style="left:90%" title="수료 기준 90%"></em></div>'+
+        '</div>';
+      }).join('')+'</div>';
+    },
+    steps(course) {
+      const done = api.attended(course.id);
+      return '<div class="chart-steps">'+
+        '<strong>'+course.name+'</strong>'+
+        '<ol>'+course.lessons.map(function(l,i){
+          const on = done.indexOf(l.name) > -1;
+          return '<li class="'+(on?'is-on':'')+'"><i></i><span>'+api.pad(i+1)+' '+l.name+'</span></li>';
+        }).join('')+'</ol>'+
+      '</div>';
+    },
     course(id) { return COURSES.find((c) => c.id === id) || null; },
     lessonNo(course, lessonName) {
       const i = (course.lessons || []).findIndex((l) => l.name === lessonName);

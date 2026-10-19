@@ -47,6 +47,7 @@
         </div>
       </div>
     </div>
+    <div class="viz" id="viz" style="margin-top:36px"></div>
     <h2 style="margin-top:48px">신청한 과정과 진도</h2>
     <p class="lead">차시를 들을수록 진도 칸이 채워집니다. 90%가 되면 수료증이 열립니다.</p>
     <table class="table" id="rows"><thead><tr><th>과정</th><th>강사</th><th>기간</th><th>완료 차시</th><th>진도</th><th>상태</th></tr></thead><tbody></tbody></table>
@@ -67,6 +68,18 @@ document.getElementById("meMail").textContent=u.email+(u.phone?" · "+u.phone:""
 const doneN=enrolled.reduce(function(s,c){return s+LMS.attended(c.id).length;},0);
 const allN=enrolled.reduce(function(s,c){return s+c.lessons.length;},0);
 document.getElementById("meSum").textContent="수강 중 "+enrolled.length+"과정 · 완료 "+doneN+"/"+allN+"차시";
+const avg=enrolled.length?Math.round(enrolled.reduce(function(s,c){return s+LMS.progress(c.id);},0)/enrolled.length):0;
+const rows=enrolled.map(function(c){return {name:c.name,pct:LMS.progress(c.id),done:LMS.attended(c.id).length,total:c.lessons.length};});
+document.getElementById("viz").innerHTML=
+  "<div class='viz-rings'>"+
+    LMS.ring(avg,"평균 진도","신청한 과정의 평균")+
+    LMS.ring(allN?Math.round(doneN/allN*100):0,"완료 차시",doneN+"/"+allN+"차시",120,doneN+"/"+allN)+
+    LMS.ring(Math.min(100,Math.round(avg/90*100)),"수료까지","90%면 수료증이 열립니다")+
+  "</div>"+
+  "<div class='viz-panel'>"+
+    "<div><h3>과정별 진도</h3><p class='note'>점선은 수료 기준 90%입니다.</p>"+LMS.bars(rows)+"</div>"+
+    "<div><h3>차시 출석</h3><div class='viz-steps'>"+enrolled.map(function(c){return LMS.steps(c);}).join("")+"</div></div>"+
+  "</div>";
 document.getElementById("next").innerHTML=enrolled.map(function(c){
   const n=LMS.nextLesson(c.id);
   return "<li><strong>"+c.name+"</strong> 다음 "+(n?LMS.pad(LMS.lessonNo(c,n.name))+"차시 "+n.name+" · "+(n.date||""):"모든 차시 완료")+"</li>";

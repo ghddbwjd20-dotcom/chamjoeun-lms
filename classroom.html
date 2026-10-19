@@ -39,6 +39,7 @@
       <div class="actions"><a class="btn fill" href="courses.html">과정 보기</a></div>
     </div>
     <div id="app" hidden>
+      <div class="viz" id="viz"></div>
       <div class="kpi" id="kpi"></div>
       <div class="cont">
         <article class="cont-main" id="cont"></article>
@@ -76,10 +77,18 @@ else{
   const avg=Math.round(list.reduce(function(s,c){return s+LMS.progress(c.id);},0)/list.length);
   const done=list.filter(function(c){return LMS.isDone(c.id);}).length;
   document.getElementById("helloLead").textContent="수강 중 "+list.length+"개 과정 · 전체 "+doneLessons+"/"+allLessons+"차시 완료 · 평균 진도 "+avg+"%";
-  document.getElementById("kpi").innerHTML=
-    "<article><b>"+list.length+"</b><span>지금 듣는 과정</span><small>"+list.map(function(c){return c.name;}).join(" · ")+"</small></article>"+
-    "<article><b>"+doneLessons+"<i>/"+allLessons+"</i></b><span>완료한 차시</span><small>남은 차시를 이어서 들으면 수료됩니다</small></article>"+
-    "<article><b>"+avg+"%</b><span>평균 진도</span><small>과정마다 90%가 되면 수료증이 열립니다</small></article>";
+  const rows=list.map(function(c){return {name:c.name,pct:LMS.progress(c.id),done:LMS.attended(c.id).length,total:c.lessons.length};});
+  document.getElementById("viz").innerHTML=
+    "<div class='viz-rings'>"+
+      LMS.ring(avg,"평균 진도","두 과정의 평균입니다")+
+      LMS.ring(Math.round(doneLessons/allLessons*100),"완료 차시",doneLessons+"/"+allLessons+"차시를 들었습니다",120,doneLessons+"/"+allLessons)+
+      LMS.ring(Math.min(100,Math.round(avg/90*100)),"수료까지","90%가 되면 수료증이 열립니다")+
+    "</div>"+
+    "<div class='viz-panel'>"+
+      "<div><h3>과정별 진도</h3><p class='note'>주황 막대가 채워질수록 들은 차시가 늘어납니다. 점선은 수료 기준 90%입니다.</p>"+LMS.bars(rows)+"</div>"+
+      "<div><h3>차시 출석</h3><p class='note'>색이 채워진 점이 출석한 차시입니다.</p><div class='viz-steps'>"+list.map(function(c){return LMS.steps(c);}).join("")+"</div></div>"+
+    "</div>";
+  document.getElementById("kpi").hidden=true;
   const first=list[0];
   const next=LMS.nextLesson(first.id);
   const no=LMS.lessonNo(first, next&&next.name);
@@ -124,6 +133,7 @@ else{
         '<p class="note">진도 '+p+'% · '+doneList.length+'/'+c.lessons.length+'차시 · 기간 '+c.period+'</p>'+
       '</div>'+
       '<div class="room-cta">'+
+        LMS.ring(p,"진도",doneList.length+"/"+c.lessons.length+"차시",88)+
         '<span class="badge'+(p>=90?" ok":"")+'">'+(p>=90?"수료 가능":"수강 중")+'</span>'+
         '<a class="btn fill" href="lesson.html?id='+c.id+'">강의 열기</a>'+
         '<a class="btn line" href="course.html?id='+c.id+'">소개</a>'+
