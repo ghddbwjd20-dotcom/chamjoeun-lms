@@ -63,7 +63,8 @@
 <footer><div class="wrap"><div class="copyright">© 2026 Chamjoeun Multiculture. UI 시안</div></div></footer>
 <script src="assets/lms.js"></script>
 <script>
-function go(){ location.href = LMS.next(); }
+function go(){ location.replace(LMS.next() === "classroom.html" ? "classroom.html?demo=1" : LMS.next()); }
+if(new URLSearchParams(location.search).get("demo")==="1"){ LMS.loginDemo(); go(); }
 document.getElementById("demoIn").onclick=function(){ LMS.loginDemo(); go(); };
 document.getElementById("loginForm").onsubmit=function(e){
   e.preventDefault();

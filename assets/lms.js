@@ -83,15 +83,15 @@
     if (!s.attend) s.attend = {};
     if (!s.pays) s.pays = {};
     if (!s.resume) s.resume = {};
-    if (!s.users.some((u) => u.email === DEMO.email)) {
-      s.users.push(DEMO);
-      s.enrolls[DEMO.email] = ["korean", "license"];
-      s.attend[DEMO.email + ":korean"] = ["발음과 인사", "시장·병원 회화"];
-      s.attend[DEMO.email + ":license"] = ["과정 소개와 역할"];
-      s.resume[DEMO.email + ":korean"] = "서류 읽기";
-      s.resume[DEMO.email + ":license"] = "병원 이동 이론";
-      s.pays[DEMO.email] = [{ id: "license", at: "2026-03-09T10:12:00", amount: 120000, status: "완료" }];
-    }
+    const i = s.users.findIndex((u) => u.email === DEMO.email);
+    if (i < 0) s.users.push({ ...DEMO });
+    else Object.assign(s.users[i], DEMO);
+    s.enrolls[DEMO.email] = ["korean", "license"];
+    if (!s.attend[DEMO.email + ":korean"]) s.attend[DEMO.email + ":korean"] = ["발음과 인사", "시장·병원 회화"];
+    if (!s.attend[DEMO.email + ":license"]) s.attend[DEMO.email + ":license"] = ["과정 소개와 역할"];
+    if (!s.resume[DEMO.email + ":korean"]) s.resume[DEMO.email + ":korean"] = "서류 읽기";
+    if (!s.resume[DEMO.email + ":license"]) s.resume[DEMO.email + ":license"] = "병원 이동 이론";
+    if (!s.pays[DEMO.email]) s.pays[DEMO.email] = [{ id: "license", at: "2026-03-09T10:12:00", amount: 120000, status: "완료" }];
     return s;
   };
   const state = () => seed(load());
@@ -112,6 +112,11 @@
       s.session = DEMO.email;
       save(s);
     },
+    bootDemo() {
+      const q = new URLSearchParams(location.search);
+      if (q.get("demo") === "1" || !api.user()) api.loginDemo();
+      return !!api.user();
+    },
     register(form) {
       const s = state();
       const email = (form.email || "").trim().toLowerCase();
@@ -124,8 +129,14 @@
       return "";
     },
     login(email, password) {
+      const e = (email || "").trim().toLowerCase();
+      const p = (password || "").trim();
+      if (e === DEMO.email && p === DEMO.password) {
+        api.loginDemo();
+        return "";
+      }
       const s = state();
-      const user = s.users.find((u) => u.email === (email || "").trim().toLowerCase() && u.password === password);
+      const user = s.users.find((u) => u.email === e && u.password === p);
       if (!user) return "이메일 또는 비밀번호가 맞지 않습니다.";
       s.session = user.email;
       save(s);
@@ -201,6 +212,7 @@
       return state().pays[user.email] || [];
     },
     requireAuth(next) {
+      if (new URLSearchParams(location.search).get("demo") === "1" || !api.user()) api.loginDemo();
       if (api.user()) return true;
       location.href = "login.html?next=" + encodeURIComponent(next || "classroom.html");
       return false;

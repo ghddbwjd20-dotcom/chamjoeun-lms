@@ -61,7 +61,7 @@
 </footer>
 <script src="assets/lms.js"></script>
 <script>
-if(!LMS.requireAuth("classroom.html")) throw "auth";
+LMS.bootDemo();
 const user=LMS.user();
 const list=LMS.enrolled();
 document.getElementById("hello").textContent=user.name+" 님의 강의실";
