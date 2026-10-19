@@ -9,7 +9,7 @@
 </head>
 <body>
 <header>
-  <div class="topbar"><div class="wrap"><span>온라인 강의실</span><a data-public="index.html">기관 홈페이지로</a></div></div>
+  <div class="topbar"><div class="wrap"><span>온라인 강의실 · UI 시안</span><a data-public="index.html">기관 홈페이지로</a></div></div>
   <div class="wrap nav">
     <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
     <nav><ul class="gnb"><li><a href="index.html">강의실 안내</a></li><li><a href="courses.html">교육과정</a></li><li><a href="classroom.html">나의 강의실</a></li><li><a href="account.html">마이페이지</a></li></ul></nav>
@@ -17,33 +17,60 @@
   </div>
 </header>
 <main>
-<section class="hero"><div class="wrap"><p class="kicker">Login</p><h1>강의실에 들어갑니다</h1><p class="lead">시안용 로그인입니다. 값은 이 브라우저에만 저장됩니다.</p></div></section>
-<section class="section"><div class="wrap">
-  <form class="auth" id="loginForm">
-    <h2>로그인</h2>
-    <p class="lead">가입한 이메일과 비밀번호를 입력해 주세요.</p>
-    <label>이메일 <input name="email" type="email" required autocomplete="username"></label>
-    <label>비밀번호 <input name="password" type="password" required autocomplete="current-password"></label>
-    <p class="note" id="loginMsg" hidden></p>
-    <div class="actions"><button class="btn fill" type="submit">로그인</button><a class="btn line" href="register.html">회원가입</a></div>
-    <p class="note"><a href="find.html">아이디 · 비밀번호 찾기</a></p>
-    <div class="social">
-      <a href="#" onclick="alert('오픈 시 네이버 로그인을 연결합니다.');return false;">네이버</a>
-      <a href="#" onclick="alert('오픈 시 카카오 로그인을 연결합니다.');return false;">카카오</a>
-      <a href="#" onclick="alert('오픈 시 구글 로그인을 연결합니다.');return false;">구글</a>
+<section class="hero">
+  <div class="wrap">
+    <p class="kicker">Login</p>
+    <h1>강의실에 들어갑니다</h1>
+    <p class="lead">시안용 로그인입니다. 아래 데모 계정으로 바로 들어가면 수강 중인 강의실을 볼 수 있습니다.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap login-grid">
+    <div>
+      <div class="demo">
+        <div>
+          <b>데모 계정</b>
+          <code>demo@chamjoeun.kr</code> / <code>demo1234</code>
+          <p class="note" style="margin:6px 0 0">이민호 님으로 들어가며, 생활 한국어·병원동행 과정이 이미 신청되어 있습니다.</p>
+        </div>
+        <button class="btn fill" type="button" id="demoIn">바로 들어가기</button>
+      </div>
+      <form class="auth" id="loginForm">
+        <h2>로그인</h2>
+        <label>이메일 <input name="email" type="email" value="demo@chamjoeun.kr" required autocomplete="username"></label>
+        <label>비밀번호 <input name="password" type="password" value="demo1234" required autocomplete="current-password"></label>
+        <p class="note" id="loginMsg" hidden></p>
+        <div class="actions"><button class="btn fill" type="submit">로그인</button><a class="btn line" href="register.html">회원가입</a></div>
+        <p class="note"><a href="find.html">아이디 · 비밀번호 찾기</a></p>
+        <div class="social">
+          <a href="#" onclick="alert('오픈 시 네이버 로그인을 연결합니다.');return false;">네이버</a>
+          <a href="#" onclick="alert('오픈 시 카카오 로그인을 연결합니다.');return false;">카카오</a>
+          <a href="#" onclick="alert('오픈 시 구글 로그인을 연결합니다.');return false;">구글</a>
+        </div>
+      </form>
     </div>
-  </form>
-</div></section>
+    <div class="box">
+      <h3>이 계정으로 보이는 것</h3>
+      <ul>
+        <li>생활 한국어 진도 50% · 다음 차시 서류 읽기</li>
+        <li>병원동행 관리사 진도 25% · 결제 완료</li>
+        <li>수료증은 진도 90% 이후 마이페이지에서 확인</li>
+      </ul>
+    </div>
+  </div>
+</section>
 </main>
 <footer><div class="wrap"><div class="copyright">© 2026 Chamjoeun Multiculture. UI 시안</div></div></footer>
 <script src="assets/lms.js"></script>
 <script>
+function go(){ location.href = LMS.next(); }
+document.getElementById("demoIn").onclick=function(){ LMS.loginDemo(); go(); };
 document.getElementById("loginForm").onsubmit=function(e){
   e.preventDefault();
   const msg=LMS.login(e.target.email.value,e.target.password.value);
   const el=document.getElementById("loginMsg");
   if(msg){el.hidden=false;el.textContent=msg;return;}
-  location.href=LMS.next();
+  go();
 };
 </script>
 </body>

@@ -50,7 +50,7 @@ LMS.courses.forEach(function(c){
   const a=document.createElement("a");
   a.className="card";
   a.href="course.html?id="+c.id;
-  a.innerHTML='<div class="thumb"><img src="'+c.img+'" alt=""></div><div class="in"><em>'+c.cat+' · '+(c.type==="paid"?"유료":"무료")+'</em><strong>'+c.name+'</strong><p>'+c.desc+'</p><div class="meta"><span>'+c.period+'</span><span>'+c.teacher+'</span><span>'+LMS.money(c.price)+'</span></div><span class="btn line">자세히</span></div>';
+  a.innerHTML='<div class="thumb"><img src="'+c.img+'" alt=""></div><div class="in"><em>'+c.cat+' · '+(c.type==="paid"?"유료":"무료")+'</em><strong>'+c.name+'</strong><p>'+c.desc+'</p><div class="meta"><span>'+c.weeks+'</span><span>'+c.teacher+'</span><span>'+LMS.money(c.price)+'</span></div><span class="btn line">자세히</span></div>';
   list.appendChild(a);
 });
 </script>

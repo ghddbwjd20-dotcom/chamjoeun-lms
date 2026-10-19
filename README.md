@@ -36,6 +36,16 @@
 
 제외(계약과 동일): 시험·퀴즈, 실시간 화상, 쿠폰, 앱, 다국어.
 
+## 데모 계정
+
+로그인된 강의실을 바로 보려면:
+
+- 이메일 `demo@chamjoeun.kr`
+- 비밀번호 `demo1234`
+- 또는 로그인 화면의 **바로 들어가기**
+
+https://ghddbwjd20-dotcom.github.io/chamjoeun-lms/login.html
+
 ## 로컬에서 보기
 
 ```

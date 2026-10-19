@@ -14,33 +14,92 @@
     <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
     <button class="menu-btn" type="button" aria-label="메뉴"><span></span><span></span><span></span></button>
     <nav><ul class="gnb"><li><a href="index.html">강의실 안내</a></li><li><a href="courses.html">교육과정</a></li><li><a class="is-on" href="classroom.html">나의 강의실</a></li><li><a href="account.html">마이페이지</a></li></ul></nav>
-    <a class="nav-cta" data-public="index.html">홈페이지</a>
+    <a class="nav-cta" data-auth-cta href="login.html">로그인</a>
   </div>
 </header>
 <main>
-<section class="hero"><div class="wrap"><p class="kicker">My Classroom</p><h1>나의 강의실</h1><p class="lead">신청한 과정의 진도와 이어보기를 한곳에서 봅니다.</p></div></section>
-<section class="section"><div class="wrap">
-  <div id="empty" class="box" hidden>
-    <h3>아직 신청한 과정이 없습니다</h3>
-    <p>교육과정에서 기관 과정을 고르면 여기에 나타납니다.</p>
-    <div class="actions"><a class="btn fill" href="courses.html">과정 보기</a></div>
+<section class="hero" style="padding:28px 0 12px">
+  <div class="wrap hello">
+    <div>
+      <p class="kicker">My Classroom</p>
+      <h1 id="hello">나의 강의실</h1>
+      <p class="lead" id="helloLead">신청한 과정의 진도와 이어보기를 한곳에서 봅니다.</p>
+    </div>
+    <div class="actions" style="margin:0">
+      <a class="btn fill" href="courses.html">과정 더보기</a>
+      <a class="btn line" href="account.html">마이페이지</a>
+    </div>
   </div>
-  <div class="grid" id="mine"></div>
-</div></section>
+</section>
+<section class="dash">
+  <div class="wrap">
+    <div id="empty" class="box" hidden>
+      <h3>아직 신청한 과정이 없습니다</h3>
+      <p>교육과정에서 기관 과정을 고르면 여기에 나타납니다.</p>
+      <div class="actions"><a class="btn fill" href="courses.html">과정 보기</a></div>
+    </div>
+    <div id="app" hidden>
+      <div class="kpi" id="kpi"></div>
+      <div class="cont">
+        <article class="cont-main" id="cont"></article>
+        <aside class="cont-side">
+          <h3>오늘 안내</h3>
+          <ul class="notice" id="notice"></ul>
+        </aside>
+      </div>
+      <p class="kicker">수강 중</p>
+      <h2>내 과정</h2>
+      <div class="room-list" id="mine"></div>
+    </div>
+  </div>
+</section>
 </main>
+<footer>
+  <div class="wrap">
+    <div class="copyright">© 2026 Chamjoeun Multiculture. UI 시안 · <a data-public="index.html">기관 홈페이지</a></div>
+  </div>
+</footer>
 <script src="assets/lms.js"></script>
 <script>
 if(!LMS.requireAuth("classroom.html")) throw "auth";
+const user=LMS.user();
 const list=LMS.enrolled();
+document.getElementById("hello").textContent=user.name+" 님의 강의실";
+document.getElementById("helloLead").textContent="이어서 들을 차시와 진도를 한 화면에서 확인합니다.";
 if(!list.length) document.getElementById("empty").hidden=false;
 else{
+  document.getElementById("app").hidden=false;
+  const avg=Math.round(list.reduce(function(s,c){return s+LMS.progress(c.id);},0)/list.length);
+  const done=list.filter(function(c){return LMS.isDone(c.id);}).length;
+  document.getElementById("kpi").innerHTML=
+    "<article><b>"+list.length+"</b><span>수강 중 과정</span></article>"+
+    "<article><b>"+avg+"%</b><span>평균 진도</span></article>"+
+    "<article><b>"+done+"</b><span>수료 과정</span></article>";
+  const first=list[0];
+  const next=LMS.nextLesson(first.id);
+  document.getElementById("cont").innerHTML=
+    "<em>이어서 듣기</em><h2 style='margin-bottom:8px'>"+first.name+"</h2>"+
+    "<p>다음 차시 · "+(next?next.name:"마지막 차시")+" · "+first.teacher+" 강사</p>"+
+    "<div class='bar'><i style='width:"+LMS.progress(first.id)+"%'></i></div>"+
+    "<p class='note'>진도 "+LMS.progress(first.id)+"% · "+first.period+"</p>"+
+    "<div class='actions'><a class='btn fill' href='lesson.html?id="+first.id+"'>이어서 학습</a></div>";
+  document.getElementById("notice").innerHTML=list.map(function(c){
+    return "<li><strong style='color:#191919'>"+c.name+"</strong> · "+c.notice+"</li>";
+  }).join("");
   const box=document.getElementById("mine");
   list.forEach(function(c){
     const p=LMS.progress(c.id);
-    const a=document.createElement("a");
-    a.className="card";
-    a.href="lesson.html?id="+c.id;
-    a.innerHTML='<div class="thumb"><img src="'+c.img+'" alt=""></div><div class="in"><em>'+c.cat+'</em><strong>'+c.name+'</strong><div class="bar"><i style="width:'+p+'%"></i></div><p>진도 '+p+'%'+(p>=90?" · 수료":"")+'</p><span class="btn line">이어서 듣기</span></div>';
+    const n=LMS.nextLesson(c.id);
+    const doneN=LMS.attended(c.id).length;
+    const a=document.createElement("article");
+    a.className="room";
+    a.innerHTML=
+      '<img src="'+c.img+'" alt="">'+
+      '<div><em class="kicker">'+c.cat+' · '+c.teacher+'</em><strong style="display:block;font-size:18px">'+c.name+'</strong>'+
+      '<div class="bar"><i style="width:'+p+'%"></i></div>'+
+      '<p class="note" style="margin:0">진도 '+p+'% · '+doneN+'/'+c.lessons.length+'차시 · 다음 '+ (n?n.name:"완료")+'</p></div>'+
+      '<div class="room-cta"><span class="badge'+(p>=90?" ok":"")+'">'+(p>=90?"수료":"수강 중")+'</span>'+
+      '<a class="btn fill" href="lesson.html?id='+c.id+'">강의실 열기</a></div>';
     box.appendChild(a);
   });
 }

@@ -13,36 +13,54 @@
   <div class="wrap nav">
     <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
     <nav><ul class="gnb"><li><a href="classroom.html">나의 강의실</a></li><li><a href="courses.html">교육과정</a></li><li><a href="account.html">마이페이지</a></li></ul></nav>
+    <a class="nav-cta" href="classroom.html">목록으로</a>
   </div>
 </header>
-<main>
-<section class="section" style="padding-top:28px">
+<main class="learn">
   <div class="wrap">
     <p class="crumb"><a href="classroom.html">나의 강의실</a> · <span id="crumb"></span></p>
-    <div class="app">
-      <aside class="side">
-        <h3>내 과정</h3>
-        <div id="side"></div>
-        <a href="courses.html">다른 과정</a>
+    <div class="learn-app">
+      <aside>
+        <div class="side-card">
+          <h3>내 과정</h3>
+          <div id="side"></div>
+        </div>
+        <div class="side-card">
+          <h3>이 과정</h3>
+          <p id="sideMeta" class="note"></p>
+        </div>
       </aside>
       <div>
-        <p class="kicker" id="cat"></p>
-        <h1 id="title"></h1>
-        <div class="bar"><i id="bar"></i></div>
-        <p class="note" id="prog"></p>
+        <div class="player-meta">
+          <div>
+            <p class="kicker" id="cat"></p>
+            <h1 id="title" style="margin-bottom:6px"></h1>
+            <p class="note" id="now"></p>
+          </div>
+          <div>
+            <div class="bar" style="width:180px;margin:0 0 6px"><i id="bar"></i></div>
+            <p class="note" id="prog"></p>
+          </div>
+        </div>
         <div class="player">
           <video id="video" controls playsinline poster="assets/icon-education.jpg">
             <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
           </video>
         </div>
-        <p class="lead" id="desc" style="margin-top:16px"></p>
-        <h3>차시 · 출석</h3>
-        <div class="lessons" id="lessons"></div>
-        <p class="note">실제 서비스에서는 재생 구간 기준으로 진도를 계산하고, 건너뛴 구간은 넣지 않습니다. 시안에서는 차시를 누르면 출석 처리됩니다.</p>
+        <div class="tabs" role="tablist">
+          <button type="button" class="is-on" data-tab="lec">차시</button>
+          <button type="button" data-tab="file">학습자료</button>
+          <button type="button" data-tab="info">안내</button>
+        </div>
+        <div class="pane is-on" id="lec">
+          <div class="lessons" id="lessons"></div>
+          <p class="note">시안에서는 차시를 누르면 출석이 쌓입니다. 실제 서비스는 재생 구간만 진도에 넣습니다.</p>
+        </div>
+        <div class="pane" id="file"></div>
+        <div class="pane" id="info"></div>
       </div>
     </div>
   </div>
-</section>
 </main>
 <script src="assets/lms.js"></script>
 <script>
@@ -51,36 +69,47 @@ const enrolled=LMS.enrolled();
 if(!enrolled.length){location.href="classroom.html";throw "empty";}
 let current=LMS.course(new URLSearchParams(location.search).get("id"))||enrolled[0];
 if(!LMS.isEnrolled(current.id)) current=enrolled[0];
-let at=0;
+let at=Math.max(0, current.lessons.findIndex(function(l){return l.name===LMS.resume(current.id);}));
+if(at<0) at=0;
+document.querySelectorAll(".tabs button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("is-on");});
+    document.querySelectorAll(".pane").forEach(function(x){x.classList.remove("is-on");});
+    b.classList.add("is-on");
+    document.getElementById(b.getAttribute("data-tab")).classList.add("is-on");
+  };
+});
 function paint(){
+  const lesson=current.lessons[at];
   document.getElementById("crumb").textContent=current.name;
-  document.getElementById("cat").textContent=current.cat;
+  document.getElementById("cat").textContent=current.cat+" · "+current.teacher+" 강사";
   document.getElementById("title").textContent=current.name;
-  document.getElementById("desc").textContent=current.desc+" 강사 "+current.teacher+" · "+current.period;
+  document.getElementById("now").textContent="지금 학습 · 0"+(at+1)+" "+lesson.name+" · "+lesson.min+"분";
   const p=LMS.progress(current.id);
   document.getElementById("bar").style.width=p+"%";
-  document.getElementById("prog").textContent="진도 "+p+"%"+(p>=90?" · 수료 기준 도달":"");
+  document.getElementById("prog").textContent="진도 "+p+"%"+(p>=90?" · 수료":"");
+  document.getElementById("sideMeta").innerHTML=current.period+"<br>"+current.weeks+"<br>"+current.hours+"<br>"+current.place;
   const side=document.getElementById("side");
   side.innerHTML="";
   enrolled.forEach(function(c){
     const b=document.createElement("button");
     b.type="button";
-    b.className=c.id===current.id?"is-on":"";
-    b.textContent=c.name;
+    b.className="side-course"+(c.id===current.id?" is-on":"");
+    b.innerHTML=c.name+"<small>진도 "+LMS.progress(c.id)+"%</small>";
     b.onclick=function(){current=c;at=0;history.replaceState(null,"","lesson.html?id="+c.id);paint();};
     side.appendChild(b);
   });
   const done=LMS.attended(current.id);
   const box=document.getElementById("lessons");
   box.innerHTML="";
-  current.lessons.forEach(function(name,i){
+  current.lessons.forEach(function(item,i){
     const b=document.createElement("button");
     b.type="button";
     b.className=i===at?"is-on":"";
-    b.innerHTML="<span>0"+(i+1)+" "+name+"</span><b>"+(done.indexOf(name)>-1?"출석":"수강")+"</b>";
+    b.innerHTML="<em>0"+(i+1)+"</em><span>"+item.name+"</span><span>"+item.min+"분</span><b>"+(done.indexOf(item.name)>-1?"출석":"대기")+"</b>";
     b.onclick=function(){
       at=i;
-      LMS.markAttend(current.id,name);
+      LMS.markAttend(current.id,item.name);
       const v=document.getElementById("video");
       v.currentTime=0;
       v.play();
@@ -88,6 +117,10 @@ function paint(){
     };
     box.appendChild(b);
   });
+  document.getElementById("file").innerHTML=current.files.map(function(f){
+    return "<div class='file'><span>"+f+"</span><button class='btn line' type='button' onclick=\"alert('오픈 시 자료를 받습니다.')\">받기</button></div>";
+  }).join("");
+  document.getElementById("info").innerHTML="<p>"+current.desc+"</p><p class='note'>"+current.notice+"</p>";
 }
 paint();
 </script>
