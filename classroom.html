@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>나의 강의실 | 참조은다문화 LMS</title>
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="stylesheet" href="assets/lms.css">
+</head>
+<body>
+<header>
+  <div class="topbar"><div class="wrap"><span>온라인 강의실</span><span data-user></span></div></div>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
+    <button class="menu-btn" type="button" aria-label="메뉴"><span></span><span></span><span></span></button>
+    <nav><ul class="gnb"><li><a href="index.html">강의실 안내</a></li><li><a href="courses.html">교육과정</a></li><li><a class="is-on" href="classroom.html">나의 강의실</a></li><li><a href="account.html">마이페이지</a></li></ul></nav>
+    <a class="nav-cta" data-public="index.html">홈페이지</a>
+  </div>
+</header>
+<main>
+<section class="hero"><div class="wrap"><p class="kicker">My Classroom</p><h1>나의 강의실</h1><p class="lead">신청한 과정의 진도와 이어보기를 한곳에서 봅니다.</p></div></section>
+<section class="section"><div class="wrap">
+  <div id="empty" class="box" hidden>
+    <h3>아직 신청한 과정이 없습니다</h3>
+    <p>교육과정에서 기관 과정을 고르면 여기에 나타납니다.</p>
+    <div class="actions"><a class="btn fill" href="courses.html">과정 보기</a></div>
+  </div>
+  <div class="grid" id="mine"></div>
+</div></section>
+</main>
+<script src="assets/lms.js"></script>
+<script>
+if(!LMS.requireAuth("classroom.html")) throw "auth";
+const list=LMS.enrolled();
+if(!list.length) document.getElementById("empty").hidden=false;
+else{
+  const box=document.getElementById("mine");
+  list.forEach(function(c){
+    const p=LMS.progress(c.id);
+    const a=document.createElement("a");
+    a.className="card";
+    a.href="lesson.html?id="+c.id;
+    a.innerHTML='<div class="thumb"><img src="'+c.img+'" alt=""></div><div class="in"><em>'+c.cat+'</em><strong>'+c.name+'</strong><div class="bar"><i style="width:'+p+'%"></i></div><p>진도 '+p+'%'+(p>=90?" · 수료":"")+'</p><span class="btn line">이어서 듣기</span></div>';
+    box.appendChild(a);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>회원가입 | 참조은다문화 LMS</title>
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="stylesheet" href="assets/lms.css">
+</head>
+<body>
+<header>
+  <div class="topbar"><div class="wrap"><span>온라인 강의실</span><a data-public="index.html">기관 홈페이지로</a></div></div>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
+    <nav><ul class="gnb"><li><a href="index.html">강의실 안내</a></li><li><a href="courses.html">교육과정</a></li><li><a href="classroom.html">나의 강의실</a></li><li><a href="account.html">마이페이지</a></li></ul></nav>
+    <a class="nav-cta" href="login.html">로그인</a>
+  </div>
+</header>
+<main>
+<section class="hero"><div class="wrap"><p class="kicker">Join</p><h1>강의실을 시작합니다</h1><p class="lead">약관 동의 후 가입하면 수강신청과 강의실을 쓸 수 있습니다. 이메일 인증은 오픈 단계에서 연결합니다.</p></div></section>
+<section class="section"><div class="wrap">
+  <form class="auth" id="regForm">
+    <h2>회원가입</h2>
+    <label>이름 <input name="name" required></label>
+    <label>이메일 <input name="email" type="email" required></label>
+    <label>휴대폰 <input name="phone" type="tel" placeholder="010-0000-0000"></label>
+    <label>비밀번호 <input name="password" type="password" required minlength="6"></label>
+    <label><input name="agree" type="checkbox" required style="width:auto;min-height:0;margin-right:8px"> 이용약관 · 개인정보 처리에 동의합니다</label>
+    <p class="note" id="regMsg" hidden></p>
+    <div class="actions"><button class="btn fill" type="submit">가입하기</button><a class="btn line" href="login.html">로그인</a></div>
+    <div class="social">
+      <a href="#" onclick="alert('소셜 가입은 오픈 시 연결합니다.');return false;">네이버</a>
+      <a href="#" onclick="alert('소셜 가입은 오픈 시 연결합니다.');return false;">카카오</a>
+      <a href="#" onclick="alert('소셜 가입은 오픈 시 연결합니다.');return false;">구글</a>
+    </div>
+  </form>
+</div></section>
+</main>
+<footer><div class="wrap"><div class="copyright">© 2026 Chamjoeun Multiculture. UI 시안</div></div></footer>
+<script src="assets/lms.js"></script>
+<script>
+document.getElementById("regForm").onsubmit=function(e){
+  e.preventDefault();
+  const f=e.target;
+  const msg=LMS.register({name:f.name.value,email:f.email.value,password:f.password.value,phone:f.phone.value});
+  const el=document.getElementById("regMsg");
+  if(msg){el.hidden=false;el.textContent=msg;return;}
+  location.href=LMS.next();
+};
+</script>
+</body>
+</html>

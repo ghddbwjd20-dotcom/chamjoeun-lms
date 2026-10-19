@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>마이페이지 | 참조은다문화 LMS</title>
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="stylesheet" href="assets/lms.css">
+</head>
+<body>
+<header>
+  <div class="topbar"><div class="wrap"><span>온라인 강의실</span><span data-user></span></div></div>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
+    <nav><ul class="gnb"><li><a href="index.html">강의실 안내</a></li><li><a href="courses.html">교육과정</a></li><li><a href="classroom.html">나의 강의실</a></li><li><a class="is-on" href="account.html">마이페이지</a></li></ul></nav>
+    <a class="nav-cta" data-public="index.html">홈페이지</a>
+  </div>
+</header>
+<main>
+<section class="hero"><div class="wrap"><p class="kicker">My Page</p><h1>신청 · 결제 · 수료</h1><p class="lead">수강 중 과정과 결제내역, 발급문서를 모았습니다.</p></div></section>
+<section class="section"><div class="wrap">
+  <div class="split">
+    <div class="box" id="me"></div>
+    <div class="box">
+      <h3>바로가기</h3>
+      <div class="actions">
+        <a class="btn fill" href="classroom.html">나의 강의실</a>
+        <a class="btn line" href="certificate.html">수료증 · 자격증</a>
+        <a class="btn line" href="courses.html">과정 더보기</a>
+      </div>
+    </div>
+  </div>
+  <h2 style="margin-top:40px">신청 · 진도</h2>
+  <table class="table" id="rows"><thead><tr><th>과정</th><th>구분</th><th>진도</th><th>상태</th></tr></thead><tbody></tbody></table>
+  <h2 style="margin-top:40px">결제내역</h2>
+  <table class="table" id="pays"><thead><tr><th>과정</th><th>금액</th><th>일시</th></tr></thead><tbody></tbody></table>
+</div></section>
+</main>
+<script src="assets/lms.js"></script>
+<script>
+if(!LMS.requireAuth("account.html")) throw "auth";
+const u=LMS.user();
+document.getElementById("me").innerHTML="<h3>"+u.name+"</h3><p>"+u.email+(u.phone?" · "+u.phone:"")+"</p><p class='note'>회원정보 수정·탈퇴는 오픈 시 이메일 인증과 함께 연결합니다.</p>";
+const body=document.querySelector("#rows tbody");
+LMS.enrolled().forEach(function(c){
+  const p=LMS.progress(c.id);
+  body.innerHTML+="<tr><td>"+c.name+"</td><td>"+(c.type==="paid"?"유료":"무료")+"</td><td>"+p+"%</td><td>"+(p>=90?"수료":"수강 중")+"</td></tr>";
+});
+if(!LMS.enrolled().length) body.innerHTML="<tr><td colspan='4'>신청한 과정이 없습니다.</td></tr>";
+const pays=document.querySelector("#pays tbody");
+const list=LMS.payments();
+pays.innerHTML=list.length?list.map(function(p){return "<tr><td>"+(LMS.course(p.id)||{}).name+"</td><td>"+LMS.money(p.amount)+"</td><td>"+p.at.slice(0,16).replace("T"," ")+"</td></tr>";}).join(""):"<tr><td colspan='3'>결제 내역이 없습니다.</td></tr>";
+</script>
+</body>
+</html>

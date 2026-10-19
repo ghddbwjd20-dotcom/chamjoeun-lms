@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>학습 | 참조은다문화 LMS</title>
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="stylesheet" href="assets/lms.css">
+</head>
+<body>
+<header>
+  <div class="topbar"><div class="wrap"><span>온라인 강의실</span><span data-user></span></div></div>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
+    <nav><ul class="gnb"><li><a href="classroom.html">나의 강의실</a></li><li><a href="courses.html">교육과정</a></li><li><a href="account.html">마이페이지</a></li></ul></nav>
+  </div>
+</header>
+<main>
+<section class="section" style="padding-top:28px">
+  <div class="wrap">
+    <p class="crumb"><a href="classroom.html">나의 강의실</a> · <span id="crumb"></span></p>
+    <div class="app">
+      <aside class="side">
+        <h3>내 과정</h3>
+        <div id="side"></div>
+        <a href="courses.html">다른 과정</a>
+      </aside>
+      <div>
+        <p class="kicker" id="cat"></p>
+        <h1 id="title"></h1>
+        <div class="bar"><i id="bar"></i></div>
+        <p class="note" id="prog"></p>
+        <div class="player">
+          <video id="video" controls playsinline poster="assets/icon-education.jpg">
+            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+          </video>
+        </div>
+        <p class="lead" id="desc" style="margin-top:16px"></p>
+        <h3>차시 · 출석</h3>
+        <div class="lessons" id="lessons"></div>
+        <p class="note">실제 서비스에서는 재생 구간 기준으로 진도를 계산하고, 건너뛴 구간은 넣지 않습니다. 시안에서는 차시를 누르면 출석 처리됩니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<script src="assets/lms.js"></script>
+<script>
+if(!LMS.requireAuth("lesson.html"+location.search)) throw "auth";
+const enrolled=LMS.enrolled();
+if(!enrolled.length){location.href="classroom.html";throw "empty";}
+let current=LMS.course(new URLSearchParams(location.search).get("id"))||enrolled[0];
+if(!LMS.isEnrolled(current.id)) current=enrolled[0];
+let at=0;
+function paint(){
+  document.getElementById("crumb").textContent=current.name;
+  document.getElementById("cat").textContent=current.cat;
+  document.getElementById("title").textContent=current.name;
+  document.getElementById("desc").textContent=current.desc+" 강사 "+current.teacher+" · "+current.period;
+  const p=LMS.progress(current.id);
+  document.getElementById("bar").style.width=p+"%";
+  document.getElementById("prog").textContent="진도 "+p+"%"+(p>=90?" · 수료 기준 도달":"");
+  const side=document.getElementById("side");
+  side.innerHTML="";
+  enrolled.forEach(function(c){
+    const b=document.createElement("button");
+    b.type="button";
+    b.className=c.id===current.id?"is-on":"";
+    b.textContent=c.name;
+    b.onclick=function(){current=c;at=0;history.replaceState(null,"","lesson.html?id="+c.id);paint();};
+    side.appendChild(b);
+  });
+  const done=LMS.attended(current.id);
+  const box=document.getElementById("lessons");
+  box.innerHTML="";
+  current.lessons.forEach(function(name,i){
+    const b=document.createElement("button");
+    b.type="button";
+    b.className=i===at?"is-on":"";
+    b.innerHTML="<span>0"+(i+1)+" "+name+"</span><b>"+(done.indexOf(name)>-1?"출석":"수강")+"</b>";
+    b.onclick=function(){
+      at=i;
+      LMS.markAttend(current.id,name);
+      const v=document.getElementById("video");
+      v.currentTime=0;
+      v.play();
+      paint();
+    };
+    box.appendChild(b);
+  });
+}
+paint();
+</script>
+</body>
+</html>

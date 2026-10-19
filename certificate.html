@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>수료증 · 자격증 | 참조은다문화 LMS</title>
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="stylesheet" href="assets/lms.css">
+</head>
+<body>
+<header>
+  <div class="topbar"><div class="wrap"><span>온라인 강의실</span><span data-user></span></div></div>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
+    <nav><ul class="gnb"><li><a href="classroom.html">나의 강의실</a></li><li><a class="is-on" href="account.html">마이페이지</a></li></ul></nav>
+  </div>
+</header>
+<main>
+<section class="hero"><div class="wrap"><p class="kicker">Documents</p><h1>수료증 · 자격증</h1><p class="lead">진도 90%에 도달한 과정은 수료증을 볼 수 있습니다. 자격증은 해당 과정만 발급합니다. PDF 저장은 오픈 시 연결합니다.</p></div></section>
+<section class="section"><div class="wrap" id="certs"></div></section>
+</main>
+<script src="assets/lms.js"></script>
+<script>
+if(!LMS.requireAuth("certificate.html")) throw "auth";
+const u=LMS.user();
+const done=LMS.enrolled().filter(function(c){return LMS.isDone(c.id);});
+const box=document.getElementById("certs");
+if(!done.length){
+  box.innerHTML="<div class='box'><h3>아직 발급할 문서가 없습니다</h3><p>차시를 이어서 듣고 진도 90%가 되면 여기에 나타납니다.</p><div class='actions'><a class='btn fill' href='classroom.html'>강의실로</a></div></div>";
+}else{
+  done.forEach(function(c,i){
+    const no="CJ-2026-"+(1001+i);
+    const kind=c.id==="license"?"자격증":"수료증";
+    box.innerHTML+='<div class="cert" style="margin-bottom:24px"><p class="en">CHAMJOEUN MULTICULTURE</p><h2>'+kind+'</h2><p>'+u.name+' 님은 <strong>'+c.name+'</strong> 과정을 이수하였기에 이 증서를 수여합니다.</p><p class="note">고유번호 '+no+' · 시안</p><div class="actions"><button class="btn fill" type="button" onclick="alert(\'오픈 시 PDF로 저장됩니다.\')">PDF 저장</button></div></div>';
+  });
+}
+</script>
+</body>
+</html>
