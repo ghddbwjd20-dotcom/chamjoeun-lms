@@ -43,32 +43,50 @@
           <video id="video" controls playsinline poster="assets/icon-education.jpg">
             <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
           </video>
-          <p class="player-cap">시안용 샘플 영상입니다. 실제 서비스에서는 이 자리에 해당 차시 강의가 재생됩니다.</p>
+          <div class="player-watch" aria-hidden="true"><i id="watchBar"></i></div>
+          <div class="player-hud" id="hud"></div>
         </div>
+        <p class="player-cap">시안용 샘플 영상입니다. 실제 서비스에서는 이 자리에 해당 차시 강의가 재생되며, 건너뛴 구간은 출석에서 빠집니다.</p>
+        <div class="player-tools" id="tools"></div>
         <div class="now-card" id="nowCard"></div>
         <div class="tabs" role="tablist">
-          <button type="button" class="is-on" data-tab="lec">차시 목록</button>
+          <button type="button" class="is-on" data-tab="lec">학습목차</button>
+          <button type="button" data-tab="att">출석부</button>
           <button type="button" data-tab="file">학습자료</button>
-          <button type="button" data-tab="info">과정 안내</button>
+          <button type="button" data-tab="qna">학습문의</button>
+          <button type="button" data-tab="info">강의계획</button>
         </div>
         <div class="pane is-on" id="lec">
           <div class="lessons" id="lessons"></div>
-          <p class="note">시안에서는 차시를 누르면 출석이 쌓입니다. 실제 서비스는 영상을 끝까지 본 구간만 진도에 넣습니다. 건너뛴 부분은 출석으로 치지 않습니다.</p>
+          <p class="note">시안에서는 차시를 누르면 출석이 쌓입니다. 실제 서비스는 실재생 90% 이상만 출석으로 인정합니다.</p>
         </div>
+        <div class="pane" id="att"></div>
         <div class="pane" id="file"></div>
+        <div class="pane" id="qna"></div>
         <div class="pane" id="info"></div>
       </div>
     </div>
   </div>
 </main>
+<footer>
+  <div class="wrap">
+    <div class="lms-foot">
+      <p><b>학습지원센터</b> 평일 09:00–18:00 · 051-000-0000 · lms@chamjoeun.kr</p>
+      <p>출석·수료 문의는 수강번호와 과정코드를 함께 알려 주세요.</p>
+    </div>
+  </div>
+</footer>
 <script src="assets/lms.js"></script>
 <script>
 LMS.bootDemo();
 const enrolled=LMS.enrolled();
 if(!enrolled.length){location.href="classroom.html";throw "empty";}
-let current=LMS.course(new URLSearchParams(location.search).get("id"))||enrolled[0];
+const q=new URLSearchParams(location.search);
+let current=LMS.course(q.get("id"))||enrolled[0];
 if(!LMS.isEnrolled(current.id)) current=enrolled[0];
 let at=Math.max(0, current.lessons.findIndex(function(l){return l.name===LMS.resume(current.id);}));
+const jump=Number(q.get("n")||0);
+if(jump>=1 && jump<=current.lessons.length) at=jump-1;
 if(at<0) at=0;
 document.querySelectorAll(".tabs button").forEach(function(b){
   b.onclick=function(){
@@ -82,12 +100,29 @@ function paint(){
   const lesson=current.lessons[at];
   document.title=lesson.name+" | "+current.name;
   document.getElementById("crumb").textContent=current.name+" · "+LMS.pad(at+1)+"차시";
-  document.getElementById("cat").textContent=current.cat+" · "+current.teacher+" 강사 · "+current.place;
+  document.getElementById("cat").textContent=(current.code||"")+" · "+current.section+" · "+current.teacher+" 강사";
   document.getElementById("title").textContent=LMS.pad(at+1)+"차시  "+lesson.name;
   document.getElementById("goal").textContent=lesson.goal||current.desc;
   const p=LMS.progress(current.id);
   document.getElementById("bar").style.width=p+"%";
   document.getElementById("prog").textContent="이 과정 진도 "+p+"% · "+LMS.attended(current.id).length+"/"+current.lessons.length+"차시"+(p>=90?" · 수료 가능":"");
+  const seen=LMS.attended(current.id).indexOf(lesson.name)>-1;
+  const meta=seen?LMS.attendMeta(current,lesson):null;
+  document.getElementById("watchBar").style.width=(meta?meta.pct:(seen?100:0))+"%";
+  document.getElementById("hud").innerHTML=
+    "<span>"+current.code+" · "+LMS.pad(at+1)+"차시 · 권장 "+lesson.min+"분 · 배속 1.0×</span>"+
+    "<span>"+(meta?"실재생 "+meta.watch+"분 ("+meta.pct+"%) · "+meta.at:"이 차시를 열면 시안 출석 · 90%부터 인정")+"</span>";
+  document.getElementById("tools").innerHTML=
+    "<button class='btn line' type='button' id='prevL'"+(at===0?" disabled":"")+">이전 차시</button>"+
+    "<span>"+LMS.pad(at+1)+" / "+LMS.pad(current.lessons.length)+"차시 · 권장 "+lesson.min+"분 · 출석 기준 실재생 90%</span>"+
+    "<button class='btn line' type='button' id='nextL'"+(at===current.lessons.length-1?" disabled":"")+">다음 차시</button>";
+  document.getElementById("prevL").onclick=function(){if(at>0){at--;history.replaceState(null,"","lesson.html?id="+current.id+"&n="+(at+1));paint();}};
+  document.getElementById("nextL").onclick=function(){
+    LMS.markAttend(current.id,current.lessons[at].name);
+    if(at<current.lessons.length-1) at++;
+    history.replaceState(null,"","lesson.html?id="+current.id+"&n="+(at+1));
+    paint();
+  };
   document.getElementById("nowCard").innerHTML=
     "<div><b>이 차시에서 다루는 내용</b><ul class='outline'>"+(lesson.outline||[]).map(function(t){return "<li>"+t+"</li>";}).join("")+"</ul></div>"+
     "<div class='facts'>"+
@@ -96,19 +131,20 @@ function paint(){
       "<span><b>출석</b>"+(LMS.attended(current.id).indexOf(lesson.name)>-1?"완료":"이 차시를 열면 시안 출석")+"</span>"+
     "</div>";
   document.getElementById("sideMeta").innerHTML=
-    "<h3>이 과정</h3>"+
+    "<h3>수강 정보</h3>"+
     "<p><strong>"+current.name+"</strong></p>"+
-    "<p class='note'>"+current.subtitle+"</p>"+
-    "<p class='note'>"+current.period+"<br>"+current.weeks+"<br>"+current.hours+"</p>"+
-    "<p class='note'>다음 수업<br>"+current.nextClass+"</p>";
+    "<p class='note'>"+(current.code||"")+" · "+current.section+" · "+(current.creditType||"")+"<br>"+(current.room||"사이버강의실")+"<br>"+current.period+"<br>남은 기간 "+current.remain+"</p>"+
+    "<p class='note'>최근 학습 "+current.lastAt+"<br>누적 학습 "+(current.studyMin||0)+"분</p>"+
+    "<p class='note'>다음 수업<br>"+current.nextClass+"</p>"+
+    "<p class='note'>강사 "+current.teacher+" · 학습지원 051-000-0000</p>";
   const side=document.getElementById("side");
   side.innerHTML="";
   enrolled.forEach(function(c){
     const b=document.createElement("button");
     b.type="button";
     b.className="side-course"+(c.id===current.id?" is-on":"");
-    b.innerHTML="<strong>"+c.name+"</strong><small>"+LMS.attended(c.id).length+"/"+c.lessons.length+"차시 · 진도 "+LMS.progress(c.id)+"%</small>";
-    b.onclick=function(){current=c;at=Math.max(0,c.lessons.findIndex(function(l){return l.name===LMS.resume(c.id);}));if(at<0)at=0;history.replaceState(null,"","lesson.html?id="+c.id);paint();};
+    b.innerHTML="<strong>"+c.name+"</strong><small>"+(c.code||"")+" · "+LMS.attended(c.id).length+"/"+c.lessons.length+"차시 · 진도 "+LMS.progress(c.id)+"%</small>";
+    b.onclick=function(){current=c;at=Math.max(0,c.lessons.findIndex(function(l){return l.name===LMS.resume(c.id);}));if(at<0)at=0;history.replaceState(null,"","lesson.html?id="+c.id+"&n="+(at+1));paint();};
     side.appendChild(b);
   });
   const done=LMS.attended(current.id);
@@ -130,6 +166,14 @@ function paint(){
     };
     box.appendChild(b);
   });
+  document.getElementById("att").innerHTML="<p class='lead' style='margin-bottom:16px'>이 과정의 출석부입니다. 출석은 실재생 90% 이상일 때 인정됩니다.</p>"+LMS.attendSheet(current);
+  document.getElementById("qna").innerHTML=
+    (current.qna&&current.qna.length?current.qna.map(function(q){
+      return "<article class='qna'><p class='q'><b>질문</b> "+q.q+"</p><p class='a'><b>"+q.who+" · "+q.date+"</b> "+q.a+"</p></article>";
+    }).join(""):"<p>등록된 문의가 없습니다.</p>")+
+    "<form class='qna-form' id='qnaForm'><label>이 과정에 질문하기</label><textarea name='q' rows='3' placeholder='차시, 자료, 출석에 대해 적어 주세요. 수강번호는 자동으로 붙습니다.'></textarea><div class='actions' style='margin-top:10px'><button class='btn fill' type='submit'>문의 등록</button></div><p class='note'>시안에서는 등록만 보여 줍니다. 오픈 후 강사가 답합니다.</p></form>";
+  const qf=document.getElementById("qnaForm");
+  if(qf) qf.onsubmit=function(e){e.preventDefault();alert("문의가 접수되었습니다. 오픈 시 강사 답변이 이 칸에 달립니다.");qf.reset();};
   document.getElementById("file").innerHTML=
     "<p class='lead' style='margin-bottom:16px'>이 과정에서 쓰는 자료입니다. 시안에서는 받는 동작만 보여 줍니다.</p>"+
     current.files.map(function(f){

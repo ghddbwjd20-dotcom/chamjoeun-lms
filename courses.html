@@ -9,12 +9,12 @@
 </head>
 <body>
 <header>
-  <div class="topbar"><div class="wrap"><span>온라인 강의실</span><a data-public="index.html">기관 홈페이지로</a></div></div>
+  <div class="topbar"><div class="wrap"><span>온라인 강의실</span><span data-user></span></div></div>
   <div class="wrap nav">
     <a class="brand" href="index.html"><img src="assets/logo.png" alt=""><span>참조은다문화 <small>Classroom / LMS</small></span></a>
     <button class="menu-btn" type="button" aria-label="메뉴"><span></span><span></span><span></span></button>
     <nav><ul class="gnb"><li><a href="index.html">강의실 안내</a></li><li><a class="is-on" href="courses.html">교육과정</a></li><li><a href="classroom.html">나의 강의실</a></li><li><a href="account.html">마이페이지</a></li></ul></nav>
-    <a class="nav-cta" href="login.html">로그인</a>
+    <a class="nav-cta" data-auth-cta href="login.html">로그인</a>
   </div>
 </header>
 <main>
@@ -50,7 +50,7 @@ LMS.courses.forEach(function(c){
   a.innerHTML=
     '<div class="thumb"><img src="'+c.img+'" alt=""></div>'+
     '<div class="in">'+
-      '<em>'+c.cat+' · '+(c.type==="paid"?LMS.money(c.price):"무료")+'</em>'+
+      '<em>'+(c.code||c.cat)+' · '+(c.section||"")+' · '+(c.type==="paid"?LMS.money(c.price):"무료")+'</em>'+
       '<strong>'+c.name+'</strong>'+
       '<p class="sub">'+(c.subtitle||"")+'</p>'+
       '<p>'+c.desc+'</p>'+

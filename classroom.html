@@ -24,10 +24,11 @@
       <p class="kicker">나의 강의실</p>
       <h1 id="hello">나의 강의실</h1>
       <p class="lead" id="helloLead">오늘 들을 차시와 남은 일정을 한 화면에서 봅니다.</p>
+      <div class="lms-strip" id="strip"></div>
     </div>
     <div class="actions" style="margin:0">
-      <a class="btn fill" href="courses.html">다른 과정 보기</a>
-      <a class="btn line" href="account.html">신청·결제 내역</a>
+      <a class="btn fill" href="courses.html">수강신청</a>
+      <a class="btn line" href="account.html">학습 이력</a>
     </div>
   </div>
 </section>
@@ -41,18 +42,19 @@
     <div id="app" hidden>
       <div class="viz" id="viz"></div>
       <div class="kpi" id="kpi"></div>
+      <div class="week" id="week"></div>
       <div class="cont">
         <article class="cont-main" id="cont"></article>
         <aside class="cont-side">
-          <h3>이번 주 일정</h3>
-          <ul class="notice" id="week"></ul>
-          <h3 style="margin-top:22px">강의실 안내</h3>
+          <h3>오늘 할 일</h3>
+          <ul class="todo" id="todo"></ul>
+          <h3 style="margin-top:22px">강의실 공지</h3>
           <ul class="notice" id="notice"></ul>
         </aside>
       </div>
       <p class="kicker">수강 중 과정</p>
-      <h2>내가 듣는 강의</h2>
-      <p class="lead" style="margin-bottom:20px">완료한 차시와 다음에 들을 차시가 과정마다 따로 표시됩니다.</p>
+      <h2>내 수강 과목</h2>
+      <p class="lead" style="margin-bottom:20px">과정코드, 최근 학습, 출석 현황이 과목마다 따로 표시됩니다.</p>
       <div class="room-list" id="mine"></div>
     </div>
   </div>
@@ -60,6 +62,10 @@
 </main>
 <footer>
   <div class="wrap">
+    <div class="lms-foot">
+      <p><b>학습지원센터</b> 평일 09:00–18:00 · 051-000-0000 · lms@chamjoeun.kr</p>
+      <p>문의할 때 수강번호와 과정코드(KOR-101 등)를 알려 주시면 더 빨리 안내합니다.</p>
+    </div>
     <div class="copyright">© 2026 Chamjoeun Multiculture. UI 시안 · <a data-public="index.html">기관 홈페이지</a></div>
   </div>
 </footer>
@@ -76,7 +82,13 @@ else{
   const allLessons=list.reduce(function(s,c){return s+c.lessons.length;},0);
   const avg=Math.round(list.reduce(function(s,c){return s+LMS.progress(c.id);},0)/list.length);
   const done=list.filter(function(c){return LMS.isDone(c.id);}).length;
-  document.getElementById("helloLead").textContent="수강 중 "+list.length+"개 과정 · 전체 "+doneLessons+"/"+allLessons+"차시 완료 · 평균 진도 "+avg+"%";
+  document.getElementById("helloLead").textContent="수강 중 "+list.length+"과목 · 전체 "+doneLessons+"/"+allLessons+"차시 완료 · 평균 진도 "+avg+"%";
+  document.getElementById("strip").innerHTML=
+    "<span>수강번호 <b>"+(user.sid||"-")+"</b></span>"+
+    "<span>학기 <b>"+(user.term||"2026년 1기")+"</b></span>"+
+    "<span>소속 <b>"+(user.org||"참조은다문화 학습자")+"</b></span>"+
+    "<span>최근 접속 <b>"+(user.lastLogin||"-")+"</b></span>"+
+    "<span>누적 학습 <b>"+list.reduce(function(s,c){return s+(c.studyMin||0);},0)+"분</b></span>";
   const rows=list.map(function(c){return {name:c.name,pct:LMS.progress(c.id),done:LMS.attended(c.id).length,total:c.lessons.length};});
   document.getElementById("viz").innerHTML=
     "<div class='viz-rings'>"+
@@ -89,12 +101,19 @@ else{
       "<div><h3>차시 출석</h3><p class='note'>색이 채워진 점이 출석한 차시입니다.</p><div class='viz-steps'>"+list.map(function(c){return LMS.steps(c);}).join("")+"</div></div>"+
     "</div>";
   document.getElementById("kpi").hidden=true;
+  document.getElementById("week").innerHTML=
+    "<h3>주간 수업 일정</h3>"+
+    "<p class='note'>출석한 차시와 다음에 들을 차시가 한 표에 보입니다. 날짜는 과정 강의계획과 같습니다.</p>"+
+    "<table class='table week-table'><thead><tr><th>수업일</th><th>과정</th><th>차시</th><th>권장</th><th>상태</th><th></th></tr></thead><tbody>"+
+    LMS.weekPlan().map(function(r){
+      return "<tr><td>"+r.date+"</td><td>"+r.code+" "+r.name+"</td><td>"+LMS.pad(r.no)+" "+r.lesson+"</td><td>"+r.min+"분</td><td><b class='st "+r.cls+"'>"+r.state+"</b></td><td><a href='lesson.html?id="+r.id+"&n="+r.no+"'>열기</a></td></tr>";
+    }).join("")+"</tbody></table>";
   const first=list[0];
   const next=LMS.nextLesson(first.id);
   const no=LMS.lessonNo(first, next&&next.name);
   const doneN=LMS.attended(first.id);
   document.getElementById("cont").innerHTML=
-    "<em>이어서 듣기 · "+first.name+"</em>"+
+    "<em>이어학습 · "+(first.code||"")+" "+first.name+"</em>"+
     "<p class='now-label'>"+LMS.pad(no)+"차시</p>"+
     "<h2>"+(next?next.name:"마지막 차시")+"</h2>"+
     "<p class='goal'>"+(next&&next.goal?next.goal:first.desc)+"</p>"+
@@ -105,14 +124,13 @@ else{
       "<span><b>진도</b>"+doneN.length+"/"+first.lessons.length+"차시 · "+LMS.progress(first.id)+"%</span>"+
     "</div>"+
     "<div class='bar'><i style='width:"+LMS.progress(first.id)+"%'></i></div>"+
-    "<div class='actions' style='margin:0 0 16px'><a class='btn fill' href='lesson.html?id="+first.id+"'>이 차시 이어서 듣기</a><a class='btn line' href='course.html?id="+first.id+"'>과정 소개 보기</a></div>"+
+    "<div class='actions' style='margin:0 0 16px'><a class='btn fill' href='lesson.html?id="+first.id+"'>이어학습 시작</a><a class='btn line' href='course.html?id="+first.id+"'>강의계획서</a></div>"+
     "<ul class='outline'>"+(next&&next.outline?next.outline.map(function(t){return "<li>"+t+"</li>";}).join(""):"")+"</ul>";
-  document.getElementById("week").innerHTML=list.map(function(c){
-    const n=LMS.nextLesson(c.id);
-    return "<li><strong>"+c.name+"</strong><span>"+(n&&n.date?n.date:c.nextClass)+"<br>"+LMS.pad(LMS.lessonNo(c,n&&n.name))+"차시 · "+(n?n.name:"일정 없음")+"</span></li>";
+  document.getElementById("todo").innerHTML=list.reduce(function(arr,c){return arr.concat((c.todos||[]).map(function(t){t.course=c.name;t.code=c.code;return t;}));},[]).map(function(t){
+    return "<li><em>"+t.type+"</em><strong>"+t.title+"</strong><span>"+(t.code||"")+" · 기한 "+t.due+" · <b class='st "+LMS.todoClass(t.state)+"'>"+t.state+"</b></span></li>";
   }).join("");
-  document.getElementById("notice").innerHTML=list.map(function(c){
-    return "<li><strong>"+c.name+"</strong><span>"+c.notice+"</span></li>";
+  document.getElementById("notice").innerHTML=list.reduce(function(arr,c){return arr.concat((c.posts||[]).map(function(p){p.course=c.name;return p;}));},[]).map(function(p){
+    return "<li><em>"+p.tag+"</em><strong>"+p.title+"</strong><span>"+p.course+" · "+p.date+"</span></li>";
   }).join("");
   const box=document.getElementById("mine");
   list.forEach(function(c){
@@ -124,13 +142,14 @@ else{
     a.innerHTML=
       '<img src="'+c.img+'" alt="">'+
       '<div>'+
-        '<em class="kicker">'+c.cat+' · '+c.teacher+' 강사 · '+c.place+'</em>'+
+        '<em class="kicker">'+(c.code||"")+' · '+c.section+' · '+(c.creditType||"")+' · '+c.teacher+' 강사</em>'+
         '<strong>'+c.name+'</strong>'+
         '<p class="sub">'+(c.subtitle||c.desc)+'</p>'+
-        '<p class="done-line"><b>완료</b> '+(doneList.length?doneList.join(" · "):"아직 없음")+'</p>'+
-        '<p class="done-line"><b>다음</b> '+(n?LMS.pad(LMS.lessonNo(c,n.name))+"차시 "+n.name+" · "+(n.date||""):"모든 차시 완료")+'</p>'+
+        '<p class="done-line"><b>최근 학습</b> '+(c.lastAt||"-")+' · 누적 '+(c.studyMin||0)+'분</p>'+
+        '<p class="done-line"><b>다음 수업</b> '+(n?LMS.pad(LMS.lessonNo(c,n.name))+"차시 "+n.name+" · "+(n.date||""):"모든 차시 완료")+'</p>'+
+        '<p class="done-line"><b>수강 기간</b> '+c.period+' · 남은 기간 '+c.remain+' · '+(c.room||"사이버강의실")+'</p>'+
         '<div class="bar"><i style="width:'+p+'%"></i></div>'+
-        '<p class="note">진도 '+p+'% · '+doneList.length+'/'+c.lessons.length+'차시 · 기간 '+c.period+'</p>'+
+        '<p class="note">진도 '+p+'% · 출석 '+doneList.length+'/'+c.lessons.length+'차시 · 수료 기준 90%</p>'+
       '</div>'+
       '<div class="room-cta">'+
         LMS.ring(p,"진도",doneList.length+"/"+c.lessons.length+"차시",88)+
